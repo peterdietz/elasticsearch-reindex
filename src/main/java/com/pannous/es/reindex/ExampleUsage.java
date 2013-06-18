@@ -26,15 +26,39 @@ public class ExampleUsage {
 
     private final static String charset = "UTF-8";
 
+    private static Logger log = Logger.getLogger("test");
+
     public static void main(String[] args) {
         String searchHost = "1.1.1.1";
         int searchPort = 9300;
-        String searchIndexName = "search_index";
-        String searchType = "some_type";
-        String newIndexName = "feed_index";
-        String newType = "some_type";
+        String searchIndexName = "dspace03";
+        String searchType = "stats";
+        String newIndexName = "dspace03";
+        String newType = "stats";
         // String filter = "{ 'term' : {'locale' : 'de'} }".replaceAll("'", "\"");
-        String filter = "{ 'query' : {'query_string' : { 'query' : 'text:blup*'} } }".replaceAll("'", "\"");
+        //String filter = "{ 'query' : {'query_string' : { 'query' : 'isBot:false'} } }".replaceAll("'", "\"");
+
+        String filter = "{\n" +
+                "   \"query\": {\n" +
+                "       \"bool\" : {\n" +
+                "           \"must\" : { \n" +
+                "               \"match_all\": {}\n" +
+                "           }, \n" +
+                "           \"must_not\" : {\n" +
+                "               \"term\" : {\n" +
+                "                   \"isBot\" : true\n" +
+                "               }\n" +
+                "           }\n" +
+                "       },\n" +
+                "      \"constant_score\" : {\n" +
+                "        \"filter\" : {\n" +
+                "            \"exists\" : { \"field\" : \"userAgent\" }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "}";
+
+
         String basicAuthCredentials = "base64_ifrequried=";
         boolean withVersion = false;
         final int hitsPerPage = 500;
@@ -43,14 +67,16 @@ public class ExampleUsage {
         int keepTimeInMinutes = 90;
         String cluster = "your_production_cluster_name";
 
-        boolean local = false;
+
+
+        boolean local = true;
         if (local) {
             cluster = "elasticsearch";
             searchHost = "localhost";
             basicAuthCredentials = "base64_ifrequried=";
         }
 
-        Logger.getLogger("test").info("querying " + searchHost + ":" + searchPort
+        log.info("querying " + searchHost + ":" + searchPort
                 + " at " + searchIndexName + " with " + basicAuthCredentials);
 
         Settings settings = ImmutableSettings.settingsBuilder()
@@ -63,16 +89,35 @@ public class ExampleUsage {
         ReIndexAction action = new ReIndexAction(emptySettings, client, contrl) {
             @Override protected MySearchHits callback(MySearchHits hits) {
                 SimpleList res = new SimpleList(hitsPerPage, hits.totalHits());
-                for (MySearchHit h : hits.getHits()) {
+                Iterable<MySearchHit> hitsIterator = hits.getHits();
+                int max = 500;
+                int i = 0;
+
+                for (MySearchHit h : hitsIterator) {
+
+                    //Testing, stop at 500
+                    i++;
+                    if(i>max) {
+                        log.info("Hit 500, stopping...");
+                        break;
+                    }
+
                     try {
                         String str = new String(h.source(), charset);
                         RewriteSearchHit newHit = new RewriteSearchHit(h.id(), h.version(), str);
-                        String someField = newHit.get("some_field");
-                        if (someField.contains("some content")) {
-                            newHit.put("some_field", "IT WORKS!");
+                        String someField = newHit.get("userAgent");
+
+                        if(SpiderDetector.isSpiderByUserAgent(someField)) {
+                            newHit.put("isBotUA", true);
+                        } else {
+                            newHit.put("isBotUA", false);
                         }
 
+
+                        newHit.put("roboChecked", true);
+
                         res.add(newHit);
+                        log.info(someField);
                     } catch (UnsupportedEncodingException ex) {
                         throw new RuntimeException(ex);
                     }
