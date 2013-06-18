@@ -1,10 +1,5 @@
 package com.pannous.es.reindex;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -20,15 +15,18 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.rest.BaseRestHandler;
-import org.elasticsearch.rest.RestChannel;
-import org.elasticsearch.rest.RestController;
-import org.elasticsearch.rest.RestRequest;
-import org.elasticsearch.rest.XContentRestResponse;
-import org.elasticsearch.rest.XContentThrowableRestResponse;
-import static org.elasticsearch.rest.RestRequest.Method.*;
-import static org.elasticsearch.rest.RestStatus.*;
-import static org.elasticsearch.rest.action.support.RestXContentBuilder.*;
+import org.elasticsearch.rest.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import static org.elasticsearch.rest.RestRequest.Method.POST;
+import static org.elasticsearch.rest.RestRequest.Method.PUT;
+import static org.elasticsearch.rest.RestStatus.OK;
+import static org.elasticsearch.rest.action.support.RestXContentBuilder.restContentBuilder;
 
 /**
  * Refeeds all the documents which matches the type and the (optional) query.
@@ -189,10 +187,10 @@ public class ReIndexAction extends BaseRestHandler {
         if (brb.numberOfActions() > 0) {
             BulkResponse rsp = brb.execute().actionGet();
             if (rsp.hasFailures()) {
-                List<Integer> list = new ArrayList<Integer>(rsp.getItems().length);
-                for (BulkItemResponse br : rsp.getItems()) {
+                List<Integer> list = new ArrayList<Integer>(rsp.items().length);
+                for (BulkItemResponse br : rsp.items()) {
                     if (br.isFailed())
-                        list.add(br.getItemId());
+                        list.add(br.itemId());
                 }
                 return list;
             }

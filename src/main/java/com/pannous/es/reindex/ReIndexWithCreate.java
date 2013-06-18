@@ -1,12 +1,10 @@
 package com.pannous.es.reindex;
 
-import java.io.IOException;
-import java.util.Map;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
+import org.elasticsearch.action.admin.indices.exists.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.client.Client;
@@ -15,19 +13,16 @@ import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.rest.BaseRestHandler;
-import org.elasticsearch.rest.RestChannel;
-import org.elasticsearch.rest.RestController;
-import org.elasticsearch.rest.RestRequest;
-import static org.elasticsearch.rest.RestRequest.Method.*;
-import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.rest.StringRestResponse;
-import org.elasticsearch.rest.XContentRestResponse;
-import org.elasticsearch.rest.XContentThrowableRestResponse;
-import static org.elasticsearch.rest.RestRequest.Method.*;
-import static org.elasticsearch.rest.RestStatus.*;
-import static org.elasticsearch.rest.action.support.RestXContentBuilder.*;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.rest.*;
+
+import java.io.IOException;
+import java.util.Map;
+
+import static org.elasticsearch.rest.RestRequest.Method.POST;
+import static org.elasticsearch.rest.RestRequest.Method.PUT;
+import static org.elasticsearch.rest.RestStatus.OK;
+import static org.elasticsearch.rest.action.support.RestXContentBuilder.restContentBuilder;
 
 /**
  * @author Peter Karich
