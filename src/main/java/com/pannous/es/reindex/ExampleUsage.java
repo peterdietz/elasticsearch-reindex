@@ -7,13 +7,18 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.rest.RestController;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -38,25 +43,65 @@ public class ExampleUsage {
         // String filter = "{ 'term' : {'locale' : 'de'} }".replaceAll("'", "\"");
         //String filter = "{ 'query' : {'query_string' : { 'query' : 'isBot:false'} } }".replaceAll("'", "\"");
 
-        String filter = "{\n" +
+        /*String filter = "{\n" +
                 "   \"query\": {\n" +
                 "       \"bool\" : {\n" +
                 "           \"must\" : { \n" +
-                "               \"match_all\": {}\n" +
+                "                    \"match_all\" : { }\n" +
                 "           }, \n" +
-                "           \"must_not\" : {\n" +
-                "               \"term\" : {\n" +
-                "                   \"isBot\" : true\n" +
-                "               }\n" +
-                "           }\n" +
+                "           \"must_not\" : [\n" +
+                "                  {\n" +
+                "                    \"term\" : {\n" +
+                "                       \"isBot\" : true\n" +
+                "                    }\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"term\" : {\n" +
+                "                       \"isBotUA\" : true\n" +
+                "                    }\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"term\" : {\n" +
+                "                       \"roboChecked\" : false\n" +
+                "                    }\n" +
+                "                  }\n" +
+                "           ]\n" +
                 "       },\n" +
                 "      \"constant_score\" : {\n" +
                 "        \"filter\" : {\n" +
-                "            \"exists\" : { \"field\" : \"userAgent\" }\n" +
+                "          \"and\" : [\n" +
+                "              {\n" +
+                "                \"exists\" : { \"field\" : \"userAgent\" }\n" +
+                "              }\n" +
+                "            ]\n" +
                 "        }\n" +
                 "      }\n" +
                 "    }\n" +
-                "}";
+                "}"; */
+
+        Calendar cal = Calendar.getInstance();
+        //TODO set to cut-off date. June 30 2013
+        Date dateEnd = cal.getTime();
+
+        //TODO set to Tschera's start date. 2012-April-1
+        cal.set(Calendar.YEAR, 2013);
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        cal.set(Calendar.HOUR_OF_DAY,0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date dateStart = cal.getTime();
+
+
+
+        FilterBuilder dateRangeFilter = FilterBuilders.rangeFilter("time").from(dateStart).to(dateEnd);
+        FilterBuilder filter = FilterBuilders.boolFilter()
+                .must(dateRangeFilter)
+                .mustNot(FilterBuilders.termFilter("roboCheckedEight", true))
+                .mustNot(FilterBuilders.termFilter("isBot", true))
+                .mustNot(FilterBuilders.termFilter("isBotReindexEight", true));
+
 
 
         String basicAuthCredentials = "base64_ifrequried=";
@@ -90,36 +135,33 @@ public class ExampleUsage {
             @Override protected MySearchHits callback(MySearchHits hits) {
                 SimpleList res = new SimpleList(hitsPerPage, hits.totalHits());
                 Iterable<MySearchHit> hitsIterator = hits.getHits();
-                int max = 500;
-                int i = 0;
 
                 for (MySearchHit h : hitsIterator) {
-
-                    //Testing, stop at 500
-                    i++;
-                    if(i>max) {
-                        log.info("Hit 500, stopping...");
-                        break;
-                    }
-
                     try {
                         String str = new String(h.source(), charset);
                         RewriteSearchHit newHit = new RewriteSearchHit(h.id(), h.version(), str);
-                        String someField = newHit.get("userAgent");
 
-                        if(SpiderDetector.isSpiderByUserAgent(someField)) {
-                            newHit.put("isBotUA", true);
+                        //Detect if this hit was from a robot, based on available IP / DNS / UserAgent
+                        String ip           = newHit.get("ip");
+                        String dns          = newHit.get("dns");
+                        String userAgent    = newHit.get("userAgent");
+
+                        if(SpiderDetector.isSpiderByIPOrDomainNameOrUserAgent(ip, dns, userAgent)) {
+                            newHit.put("isBotReindexEight", true);
                         } else {
-                            newHit.put("isBotUA", false);
+                            newHit.put("isBotReindexEight", false);
                         }
 
 
-                        newHit.put("roboChecked", true);
+                        newHit.put("roboCheckedEight", true);
 
                         res.add(newHit);
-                        log.info(someField);
-                    } catch (UnsupportedEncodingException ex) {
-                        throw new RuntimeException(ex);
+                    } catch (Exception e) {
+                        if(e.getMessage().contains("Duplicate key")) {
+                            log.info("Invalid hit, based on UA, skipping?");
+                        } else {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
                 return res;
@@ -133,6 +175,9 @@ public class ExampleUsage {
 
         // now feed and call callback
         action.reindex(rsp, newIndexName, newType, withVersion, waitInSeconds);
+
+        SpiderDetector.printDNSCacheOutput();
+        SpiderDetector.printUACacheOutput();
 
         client.close();
     }
@@ -173,6 +218,8 @@ public class ExampleUsage {
             try {
                 json = new JSONObject(jsonStr);
             } catch (JSONException ex) {
+                //java.lang.RuntimeException: org.json.JSONException: Duplicate key "userAgent"
+                log.log(Level.WARNING, jsonStr);
                 throw new RuntimeException(ex);
             }
         }

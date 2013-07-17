@@ -15,6 +15,7 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.rest.*;
 
 import java.io.IOException;
@@ -119,6 +120,19 @@ public class ReIndexAction extends BaseRestHandler {
 
         if (filter != null && !filter.trim().isEmpty())
             srb.setFilter(filter);
+        return srb;
+    }
+
+    public SearchRequestBuilder createScrollSearch(String oldIndexName, String oldType, FilterBuilder filter,
+                                                   int hitsPerPage, boolean withVersion, int keepTimeInMinutes) {
+        SearchRequestBuilder srb = client.prepareSearch(oldIndexName).
+                setTypes(oldType).
+                setVersion(withVersion).
+                setSize(hitsPerPage).
+                setSearchType(SearchType.SCAN).
+                setScroll(TimeValue.timeValueMinutes(keepTimeInMinutes));
+
+        srb.setFilter(filter);
         return srb;
     }
 
