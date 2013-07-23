@@ -40,44 +40,6 @@ public class ExampleUsage {
         String searchType = "stats";
         String newIndexName = "dspace03";
         String newType = "stats";
-        // String filter = "{ 'term' : {'locale' : 'de'} }".replaceAll("'", "\"");
-        //String filter = "{ 'query' : {'query_string' : { 'query' : 'isBot:false'} } }".replaceAll("'", "\"");
-
-        /*String filter = "{\n" +
-                "   \"query\": {\n" +
-                "       \"bool\" : {\n" +
-                "           \"must\" : { \n" +
-                "                    \"match_all\" : { }\n" +
-                "           }, \n" +
-                "           \"must_not\" : [\n" +
-                "                  {\n" +
-                "                    \"term\" : {\n" +
-                "                       \"isBot\" : true\n" +
-                "                    }\n" +
-                "                  },\n" +
-                "                  {\n" +
-                "                    \"term\" : {\n" +
-                "                       \"isBotUA\" : true\n" +
-                "                    }\n" +
-                "                  },\n" +
-                "                  {\n" +
-                "                    \"term\" : {\n" +
-                "                       \"roboChecked\" : false\n" +
-                "                    }\n" +
-                "                  }\n" +
-                "           ]\n" +
-                "       },\n" +
-                "      \"constant_score\" : {\n" +
-                "        \"filter\" : {\n" +
-                "          \"and\" : [\n" +
-                "              {\n" +
-                "                \"exists\" : { \"field\" : \"userAgent\" }\n" +
-                "              }\n" +
-                "            ]\n" +
-                "        }\n" +
-                "      }\n" +
-                "    }\n" +
-                "}"; */
 
         Calendar cal = Calendar.getInstance();
         //TODO set to cut-off date. June 30 2013
@@ -104,25 +66,14 @@ public class ExampleUsage {
 
 
 
-        String basicAuthCredentials = "base64_ifrequried=";
         boolean withVersion = false;
         final int hitsPerPage = 500;
         float waitInSeconds = 0.1f;
         // increase if you have lots of things to update
         int keepTimeInMinutes = 90;
-        String cluster = "your_production_cluster_name";
+        String cluster = "elasticsearch";
 
-
-
-        boolean local = true;
-        if (local) {
-            cluster = "elasticsearch";
-            searchHost = "localhost";
-            basicAuthCredentials = "base64_ifrequried=";
-        }
-
-        log.info("querying " + searchHost + ":" + searchPort
-                + " at " + searchIndexName + " with " + basicAuthCredentials);
+        log.info("querying " + searchHost + ":" + searchPort + " at " + searchIndexName);
 
         Settings settings = ImmutableSettings.settingsBuilder()
                 .put("cluster.name", cluster).build();
