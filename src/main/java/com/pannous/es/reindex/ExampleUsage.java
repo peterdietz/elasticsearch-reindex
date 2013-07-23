@@ -34,11 +34,12 @@ public class ExampleUsage {
     private static Logger log = Logger.getLogger("test");
 
     public static void main(String[] args) {
-        String searchHost = "1.1.1.1";
+        String searchHost = "lib-witpela-v01.it.ohio-state.edu";
+        //String searchHost = "localhost";
         int searchPort = 9300;
-        String searchIndexName = "dspace03";
+        String searchIndexName = "dspace04";
         String searchType = "stats";
-        String newIndexName = "dspace03";
+        String newIndexName = "dspace04";
         String newType = "stats";
 
         Calendar cal = Calendar.getInstance();
