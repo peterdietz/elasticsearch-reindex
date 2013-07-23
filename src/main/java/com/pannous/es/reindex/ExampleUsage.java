@@ -64,13 +64,12 @@ public class ExampleUsage {
         Date dateEnd = cal.getTime();
 
 
+
         FilterBuilder dateRangeFilter = FilterBuilders.rangeFilter("time").from(dateStart).to(dateEnd);
         FilterBuilder filter = FilterBuilders.boolFilter()
                 .must(dateRangeFilter)
-                .mustNot(FilterBuilders.termFilter("roboCheckedEight", true))
-                .mustNot(FilterBuilders.termFilter("isBot", true))
-                .mustNot(FilterBuilders.termFilter("isBotReindexEight", true));
-
+                .mustNot(FilterBuilders.termFilter("roboChecked", true))
+                .mustNot(FilterBuilders.termFilter("isBot", true));
 
 
         boolean withVersion = false;
@@ -105,13 +104,13 @@ public class ExampleUsage {
                         String userAgent    = newHit.get("userAgent");
 
                         if(SpiderDetector.isSpiderByIPOrDomainNameOrUserAgent(ip, dns, userAgent)) {
-                            newHit.put("isBotReindexEight", true);
+                            newHit.put("isBot", true);
                         } else {
-                            newHit.put("isBotReindexEight", false);
+                            newHit.put("isBot", false);
                         }
 
 
-                        newHit.put("roboCheckedEight", true);
+                        newHit.put("roboChecked", true);
 
                         res.add(newHit);
                     } catch (Exception e) {
