@@ -42,12 +42,10 @@ public class ExampleUsage {
         String newType = "stats";
 
         Calendar cal = Calendar.getInstance();
-        //TODO set to cut-off date. June 30 2013
-        Date dateEnd = cal.getTime();
 
-        //TODO set to Tschera's start date. 2012-April-1
-        cal.set(Calendar.YEAR, 2013);
-        cal.set(Calendar.MONTH, Calendar.JUNE);
+        //Specific Start Date == 2012-April-1
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.MONTH, Calendar.APRIL);
         cal.set(Calendar.DAY_OF_MONTH, 1);
         cal.set(Calendar.HOUR_OF_DAY,0);
         cal.set(Calendar.MINUTE, 0);
@@ -55,6 +53,15 @@ public class ExampleUsage {
         cal.set(Calendar.MILLISECOND, 0);
         Date dateStart = cal.getTime();
 
+        //Specific cut-off date. June 30 2013
+        cal.set(Calendar.YEAR, 2013);
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        cal.set(Calendar.DAY_OF_MONTH, 30);
+        cal.set(Calendar.HOUR_OF_DAY,0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date dateEnd = cal.getTime();
 
 
         FilterBuilder dateRangeFilter = FilterBuilders.rangeFilter("time").from(dateStart).to(dateEnd);
