@@ -13,11 +13,10 @@ import org.elasticsearch.rest.RestController;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,19 +27,34 @@ import java.util.logging.Logger;
  * @author Peter Karich
  */
 public class ExampleUsage {
-
     private final static String charset = "UTF-8";
 
     private static Logger log = Logger.getLogger("test");
 
+    private static Properties prop;
+
+    static {
+        prop = new Properties();
+        InputStream in = ExampleUsage.class.getResourceAsStream("es.properties");
+        try {
+            prop.load(in);
+            in.close();
+
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+
+
     public static void main(String[] args) {
-        String searchHost = "lib-witpela-v01.it.ohio-state.edu";
+        String searchHost = prop.getProperty("host", "localhost");
         //String searchHost = "localhost";
-        int searchPort = 9300;
-        String searchIndexName = "dspace04";
-        String searchType = "stats";
-        String newIndexName = "dspace04";
-        String newType = "stats";
+        int searchPort = Integer.valueOf(prop.getProperty("port", "9300"));
+        String searchIndexName = prop.getProperty("indexName", "indexname");
+        String searchType = prop.getProperty("indexType", "indextype");
+        String newIndexName = searchIndexName;
+        String newType = searchType;
 
         Calendar cal = Calendar.getInstance();
 

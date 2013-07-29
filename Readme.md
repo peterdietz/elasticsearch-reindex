@@ -1,5 +1,13 @@
 # Purpose
 
+Reindexing an ElasticSearch index specifically to detect and mark robots/spiders in the index.
+ i.e. DSpace Usage adds the IP, DNS, UserAgent of visitor, but these were never marked if we determined if it was a robot (i.e. GoogleBot)
+ This tool will run over your dspace usage statistics log (in elasticsearch), and do lookups if the user was a spider.
+
+ To compile: mvn clean compile assembly:single
+ To run: java -jar target/reindex-0.90.0-SNAPSHOT-jar-with-dependencies.jar com.pannous.es.reindex.ExampleUsage
+
+
 This plugin can be used to
 
  * update all or selected documents of an index, e.g. after you change the settings of a type 
